@@ -4,7 +4,7 @@
 
 ### Bayesian Theory
 
-### Generalised Regression Models [[GRM-outline]]
+### [Generalised Regression Models](./Statistics/GRM/GRM-outline.md)
 
 ## Operational Research
 
