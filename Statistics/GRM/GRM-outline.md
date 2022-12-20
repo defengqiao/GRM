@@ -62,7 +62,6 @@
 #### Estimate standard error
 
 - $\textrm{ESE}(c^T\hat{\beta})$
-
 - $\textrm{ESE}(\hat{\beta}_r )$
 
 #### t-statistic for $\hat{\lambda}$
@@ -76,7 +75,6 @@
 #### Estimated standard error
 
 - $\textrm{ESE}(c_0\hat{\gamma}+c^T\hat{\dot{\beta}})$
-
 - $\textrm{ESE}(\hat{\dot{\beta}}_r)$
 
 #### Future responses of $\dot{\beta}$
@@ -93,7 +91,7 @@
 
 #### Testing fit of model with replicate data
 
-##### Lake of Fit
+##### [Lake of Fit](Lack-of-Fit.md)
 
 ##### Pure Error
 
@@ -115,6 +113,10 @@
 
 #### use MLE to fit a GLM
 
-#### iterative procedure to determine the MLEs [[\]]
+#### iterative procedure to determine the MLEs
 
-## Using models with random effects
+## Generalized linear mixed models
+
+### fixed effects
+
+### random effects
