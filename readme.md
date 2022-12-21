@@ -2,9 +2,9 @@
 
 ## Statistics
 
-### Bayesian Theory
+### [Bayesian Theory](/Statistics/Bayesian%20Theory/overview.md)
 
-### [Generalised Regression Models](./Statistics/GRM/GRM-outline.md)
+### [Generalised Regression Models](Statistics/GRM/overview.md)
 
 ## Operational Research
 
