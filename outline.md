@@ -1,9 +1,5 @@
 # Notes
 
-This is my personal notes.
-
-[Click Here](./outline.html) to see the outline
-
 ## Statistics
 
 ### [Bayesian Theory](./Bayesian_Theory/overview.md)
