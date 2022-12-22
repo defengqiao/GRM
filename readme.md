@@ -2,11 +2,15 @@
 
 ## Statistics
 
-### [Bayesian Theory](/Bayesian%20Theory/overview.md)
+### [Bayesian Theory](./Bayesian_Theory/overview.md)
 
-### [Generalised Regression Models](/Generalized%20Regression%20Models/overview.md)
+### [Generalised Regression Models](./Generalied_Regression_Models/overview.md)
 
 ## Operational Research
+
+### [Fundamentals of Optimization](./Fundamentals_of_Optimization/)
+
+### [Fundamentals of OR](./Fundamentals_of_OR/FuOR_notes.pdf)
 
 ## Mechine Learning
 
