@@ -1,0 +1,168 @@
+---
+title: "L3_RCode"
+author: "K. Newman"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+ 
+ 
+```{r, libraries, echo=FALSE,message=FALSE}
+library(tinytex)
+```
+ 
+## Normal dist'n inference for $\mu$ with known $\sigma^2$
+```{r,Normal known var,fig.height=3,fig.width=4}
+#-- Posterior mu given known sigma
+sigma <- 50; m <- 0.6744898^2; n <- 20; ybar <- 165; mu.0<-200
+w <- n/(m+n)
+post.E <- w*ybar+ (1-w)*mu.0;
+post.V <- sigma^2/(m+n)
+cat("w=",w,"1-w=",1-w,"post.E=",post.E, "post.V=",post.V,"post.sd=",sqrt(post.V),"\n")
+
+#--plot prior and posterior
+x.seq <- 10:450
+y.prior <- dnorm(x.seq,mean=mu.0,sd=sigma/sqrt(m))
+y.post  <- dnorm(x.seq,mean=post.E,sd=sqrt(post.V))
+my.ylim <- range(c(y.prior,y.post))
+plot(x.seq,y.prior,xlab=expression(mu),ylab="",ylim=my.ylim,type="l")
+lines(x.seq,y.post,lty=2,col=2)
+legend("topright",legend=c("Prior","Posterior"),col=1:2,lty=1:2)
+```
+
+\newpage 
+## Normal dist'n inference for $\sigma^2$ with known $\mu$  
+```{r, Normal for var, fig.height=3, fig.width=4,message=FALSE, warning=FALSE}
+library(MCMCpack)  #this has dinvgamma() function
+
+#This function is using Moment Matching to find Inv Gamma hyperparameters
+inv.gamma.param.calc <- function(mu,V) {
+  alpha <- 2+mu^2/V
+  beta  <- mu*(alpha-1)
+  out <- list(alpha=alpha,beta=beta)
+  return(out)
+}
+set.seed(742)
+n   <- 10
+y   <- rnorm(n=n,mean=3.5,sd=sqrt(0.01))
+y   <- round(y,3)
+sse <- sum((y-3.5)^2)
+cat("sse=",sse,"\n")
+
+temp <- inv.gamma.param.calc(0.05,0.02)
+prior.alpha <- temp$alpha
+prior.beta  <- temp$beta
+
+post.alpha  <- prior.alpha+n/2
+post.beta   <- prior.beta + sse/2
+
+post.mean   <- post.beta/(post.alpha-1)
+post.var    <- post.beta^2/((post.alpha-1)^2*(post.alpha-2))
+
+cat("Prior alpha=",prior.alpha,"and beta=",prior.beta,"\n")
+cat("Post alpha=",post.alpha,"and beta=",post.beta,"\n")
+cat("Post mean=",post.mean,"var=",post.var,"\n")
+
+theta.seq     <- seq(0.01,0.4,length=100)
+prior.density <- dinvgamma(x=theta.seq, shape=prior.alpha, scale = prior.beta)
+post.density  <- dinvgamma(x=theta.seq, shape=post.alpha, scale = post.beta)
+my.ylim       <- range(c(prior.density,post.density))
+plot(theta.seq,prior.density,type="l",xlab=expression(sigma^2),ylab="",ylim=my.ylim)
+lines(theta.seq,post.density,col=2,lty=2)
+legend("topright",legend=c("Prior","Posterior"),lty=1:2,col=1:2)
+
+# 95% credible interval
+x <- qgamma(c(0.025,0.975),shape=post.alpha,rate=post.beta)
+cat("95% credible interval for variance", rev(1/x), "\n")
+```
+
+\newpage
+## Linear regression with Dugong data
+The R code for fitting the Dugong data and the call to JAGS are shown below.
+
+#### Setup for MCMC simulations with JAGS
+```{r, Dugong}
+library(rjags)
+dugong.data <- 
+  list(age = c( 1.0, 1.5, 1.5, 1.5, 2.5, 4.0, 5.0, 5.0, 7.0,
+                8.0, 8.5, 9.0, 9.5, 9.5, 10.0, 12.0, 12.0, 13.0,
+                13.0, 14.5, 15.5, 15.5, 16.5, 17.0, 22.5, 29.0, 31.5),
+       length = c(1.80, 1.85, 1.87, 1.77, 2.02, 2.27, 2.15, 2.26, 2.47,
+                  2.19, 2.26, 2.40, 2.39, 2.41, 2.50, 2.32, 2.32, 2.43,
+                  2.47, 2.56, 2.65, 2.47, 2.64, 2.56, 2.70, 2.72, 2.57), n = 27) 
+
+log.age <- log(dugong.data$age)
+plot(dugong.data$length ~ log.age,xlab="Log(Age)",ylab="",main="Dugong length vs log(age)")
+
+# Initial values for running 3 MCMC chains in JAGS
+num.chains   <- 3
+beta0.set    <- c(-1,0,1)
+beta1.set    <- c(-1,0,1)
+sigma2.set   <- c(3,10,15)
+dugong.inits <- list()
+for(i in 1:num.chains) {
+  dugong.inits[[i]] <- list(beta0=beta0.set[i],beta1=beta1.set[i],
+                            sigma2=sigma2.set[i])
+}
+
+
+dugong.model <-   "model {
+ # data that will be read in are age and length and n
+ #Hyperparameters 
+ beta.low    <- -50 
+ tau   <- 1/sigma2
+
+ #priors
+ beta0 ~ dunif(-50,50)
+ beta1 ~ dunif(-50,50)
+ sigma2 ~ dunif(0.01,20)
+
+#Likelihood
+for(i in 1:n) { 
+ logage[i] <- log(age[i])
+ mu[i] <- beta0 + beta1 * logage[i]
+ length[i] ~ dnorm(mu[i], tau)
+ }
+}"
+```
+
+
+#### JAGS run
+```{r, Dugong run JAGS}
+set.seed(742)
+burnin <- 2000
+inference.length <- 10000
+dugong.results.initial <- jags.model(file=textConnection(dugong.model), 
+                                     data=dugong.data, inits=dugong.inits, 
+                                     n.chains=num.chains)
+update(dugong.results.initial, n.iter=burnin)
+dugong.results.final <- coda.samples(model=dugong.results.initial,
+          variable.names=c("beta0","beta1","sigma2"),
+                        n.iter=inference.length,thin=10)
+summary(dugong.results.final)
+
+#--- for looking at the entire combined results convert the mcmc.list object to a data frame
+dugong.results.df <- as.data.frame(as.matrix(dugong.results.final))
+head(dugong.results.df)
+```
+
+#### Plotting summaries from Dugong posterior
+```{r, Dugong Plotting Results}
+par(mfrow=c(2,2),oma=c(0,0,3,0))
+plot(density(dugong.results.df$beta0),xlab=expression(beta[0]),ylab="",
+     main=expression(beta[0]))
+plot(density(dugong.results.df$beta1),xlab=expression(beta[1]),ylab="",
+     main=expression(beta[1]))
+plot(density(dugong.results.df$sigma2),xlab=expression(sigma^2),ylab="",
+     main=expression(sigma^2))
+plot( dugong.results.df$beta0,dugong.results.df$beta1,xlab=expression(beta[0]),ylab="",
+      main= expression(paste("Joint dist ",beta[0]," ",beta[1])))
+par(mfrow=c(1,1))
+
+
+#Frequentist results
+dugong.freq.lm <- lm(length ~ log.age,data=dugong.data)
+summary(dugong.freq.lm)
+```
+

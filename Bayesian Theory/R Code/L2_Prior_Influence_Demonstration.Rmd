@@ -1,0 +1,119 @@
+---
+title: "L2_Prior_Influence_Demonstration"
+author: "K. Newman"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Lecture 2 R Code
+
+```{r, setup, echo=TRUE, message=FALSE}
+library(LearnBayes)
+library(tinytex)
+```
+
+## Draw prior, likelihood, and posterior for the binomial with Beta prior
+
+```{r, Triplot Modified}
+#---- modified triplot function from the LearnBayes package
+triplot.mod <- function (prior, data, where = "topright",mytitle=NULL,mycex=0.8) 
+ {
+  a <- prior[1]; b <- prior[2]
+  s <- data[1];  f <- data[2]; n <- s+f
+  p <- seq(0.005, 0.995, length = 500)
+  prior <- dbeta(p, a, b)
+  like  <- dbeta(p, s + 1, f + 1)
+  post  <- dbeta(p, a + s, b + f)
+  m     <-max(c(prior, like, post))
+  
+  if(is.null(mytitle)) {
+     mytitle <- paste("Prior= beta(", a, ",", b, ")\n y=", 
+                      s, ", n=", n)
+  }
+  plot(p, post, type = "l", ylab = "Density", lty = 3, lwd = 1, 
+       main = mytitle, ylim = c(0, m), col = "red",
+       xlab=expression(phi))
+  lines(p, like, lty = 2, lwd = 1, col = "black")
+  lines(p, prior, lty = 1, lwd = 1, col = "blue")
+  legend(where, c("Prior", "Likelihood", "Posterior"), 
+    lty = 1:3,lwd = c(1,1,1), col = c("blue","black","red"),cex=mycex)
+}
+```
+
+## Example plots
+```{r, Surgeon vs Med Student, fig.height=5, fig.width=6}
+# Comparing Surgeon and Medical Student priors and posteriors
+theta.seq <- seq(0.01,0.99,by=0.01)
+a1 <- 29.3; b1 <- 12.557
+a2 <- 2.625; b2 <- 2.625
+pi1 <- 0.6
+n.vec <- c(5,10,100)
+y.vec <- c(1,9,62)
+cex.opt <- 0.6
+
+par(mfrow=c(2,3))
+for(i in 1:3) {
+ triplot.mod(prior=c(a1,b1),data=c(y.vec[i],n.vec[i]-y.vec[i]),
+             mycex=cex.opt)
+ }
+ for(i in 1:3) {
+ triplot.mod(prior=c(a2,b2),data=c(y.vec[i],n.vec[i]-y.vec[i]),
+             mycex=cex.opt)
+ }
+ par(mfrow=c(1,1))
+```
+
+## Mixture Priors Example
+ The function \texttt{binomial.beta.mix} in the
+LearnBayes package will calculate the
+posterior weights $Q_i$'s 
+it can accommodate mixtures of 2, 3, 4, and more
+Beta distributions.
+```{r, Mixture Prior}
+# Mixture Prior for Binomial Data distribution
+ 
+p.vec <- c(0.6,0.4)
+
+a.vec <- c(29.3,2.625)
+b.vec <- c(12.557,2.625)
+
+# Data output
+n <- 10
+y <- 4
+
+#calculate posterior mixture distribution
+posterior.out <- binomial.beta.mix(probs=p.vec,
+        betapar=cbind(a.vec,b.vec),data=c(y,n-y))
+
+#------
+# These are the posterior weights
+print(posterior.out$probs)
+
+
+# These are the 2 beta distribution parameters
+print(posterior.out$betapar)
+
+# Plot the prior and posterior distributions  
+# The function d.mix.beta calculates the pdf
+d.mix.beta <- function(theta,a.vec,b.vec,q.vec) {
+  number.dists <- length(a.vec)
+  out.density <- q.vec[1]*dbeta(theta,a.vec[1],b.vec[1])
+  for(i in 2:number.dists)
+    out.density <- out.density+q.vec[i]*dbeta(theta,a.vec[i],b.vec[i])
+  return(out.density) 
+ }
+
+theta.seq <- seq(0.01,0.99,by=0.01)
+out.prior <- d.mix.beta(theta=theta.seq,a.vec=a.vec,b.vec=b.vec,q.vec=p.vec)
+out.posterior <- d.mix.beta(theta=theta.seq,a.vec=posterior.out$betapar[,1],
+            b.vec=posterior.out$betapar[,2],q.vec=posterior.out$probs)
+my.ylim <- range(c(out.prior,out.posterior))
+plot(theta.seq,out.prior,ylim=my.ylim,xlab=expression(theta),ylab="",
+     col="blue",lty=1,type="l")
+lines(theta.seq,out.posterior,col="red",lty=2)
+legend("topleft",legend=c("Prior","Posterior"),col=c("blue","red"),
+       lty=c(1,2))
+```
+
+
+

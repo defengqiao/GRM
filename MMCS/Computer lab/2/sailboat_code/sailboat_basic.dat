@@ -1,0 +1,6 @@
+period_names: ["Spring" "Summer" "Autumn" "Winter"]
+cost: 400
+demand: [40 60 75 25]
+holding_cost: 50
+max_production: 60
+production_limit: 1860

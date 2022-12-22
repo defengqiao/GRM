@@ -1,0 +1,65 @@
+model portfolio_quadratic
+uses "mmxprs", "mmquad"
+
+! Computer session 4
+
+parameters
+	max_minimum_return=15
+	jump = 0.25
+end-parameters
+
+declarations
+	number_of_assets = 10
+	asset = 1..number_of_assets
+	asset_name: array(asset) of string
+	returns: array(asset) of real
+	risky, northamerican: set of integer
+	x: array(asset) of mpvar
+	Q: array(asset,asset) of real
+	min_return: real
+end-declarations
+
+initialisations from "portfolio_quadratic.dat"
+	asset_name returns risky northamerican Q
+end-initialisations
+
+!mximum investment quantity
+forall(i in asset) do
+	x(i) <= 0.3
+end-do
+
+!north American
+sum(i in northamerican) x(i) >=0.5
+
+!Risky assets
+sum(i in risky) x(i)<= 0.333
+
+!minimum return requirements
+Min_return := sum(i in asset) x(i)*returns(i)>=min_return
+
+!proportion total
+sum(i in asset) x(i)<=1
+
+z:=sum(i in asset,j in asset) Q(i,j)*x(i)*x(j)
+
+fopen("data+frontier.csv", F_OUTPUT)
+writeln("min_return",",","risk")
+min_return := 0
+repeat
+	!minimum return requirements
+	Min_return := sum(i in asset) x(i)*returns(i)>=min_return
+	minimise(z)
+	writeln(min_return,",",getobjval)
+	min_return += jump
+	
+until ((getprobstat = XPRS_INF) or (min_return >= max_minimum_return))
+
+minimise(z)
+
+!fopen("portfolio.csv",F_OUTPUT)
+!writeln("asset",",","Fraction")
+!writeln("The optimal portfolio is:")
+!writeln
+!forall(i in asset) writeln(strfmt(asset_name(i),11),": ",strfmt(100*getsol(x(i)),5,2),"%.")
+!fclose(F_OUTPUT)
+end-model

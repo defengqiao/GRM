@@ -1,0 +1,131 @@
+---
+title: "L1"
+author: "K. Newman"
+date: "2022-09-16"
+output:
+  pdf_document: default
+  html_document: default
+fig_width: 3
+fig_height: 2
+---
+
+ 
+ ## L1 PMF Demonstrations
+ 
+```{r Bernoulli}
+set.seed(192)
+num.samples <- 50
+
+# Bernoulli
+y1 <- rbinom(n=num.samples,size=1,prob=0.3)
+plot(1:num.samples,y1,xlab="Trials",ylab="0/1 Outcome",main="Bernoulli Outcomes")
+```
+ 
+```{r binomial}
+#Binomial(m,theta)
+
+m <- 15
+theta <- 0.7
+y2 <- rbinom(n=num.samples,size=m,prob=theta)
+plot(1:num.samples,y2,xlab="Sample",ylab="",
+     main=paste("Binomial Outcomes with",m,"trials and Theta=",theta))
+```
+
+```{r poisson}
+# Poisson
+theta <- 5
+y3 <- rpois(n=num.samples,lambda=theta)
+plot(1:num.samples,y3,xlab="Sample",ylab="",main=paste("Poisson with theta=",theta))
+
+```
+
+```{r Mn}
+# Multinomial
+m <- 30
+prob.vec <- c(0.3,0.6,0.1)
+names(prob.vec) <- LETTERS[1:3]
+y4 <- rmultinom(n=num.samples,size=m,prob=prob.vec)
+dimnames(y4) <- list(names(prob.vec),NULL)
+barplot(height=apply(y4,1,sum),main=paste("Multinomial Probs\n",paste(prob.vec,collapse=" ")))
+ 
+
+```
+
+### Show Bernoulli, Binomial, Poisson, and Multinomial
+```{r PMFs}
+par(mfrow=c(2,2),oma=c(0,0,3,0))
+hist(y1,xlab="Trials",ylab="0/1 Outcome",main="Bernoulli")
+hist(y2,xlab="Sample",ylab="",
+     main=paste("Binomial with",m,"trials and Theta=",theta))
+hist(y3,xlab="Outcomes",ylab="",prob=TRUE,main=paste("Poisson with theta=",theta))
+barplot(height=apply(y4,1,sum),main=paste("Multinomial Probs\n",paste(prob.vec,collapse=" ")))
+par(mfrow=c(1,1))
+```
+
+
+  ## L1 PDF Demonstrations
+  
+```{r pdfs}
+set.seed(83)
+num.samples <- 100
+
+# Uniform
+umin <- 3; umax <- 15
+yu <- runif(n=num.samples,min=umin,max=umax)
+
+# Beta
+bs1 <- 4; bs2 <- 3
+yb <- rbeta(n=num.samples,shape1=bs1,shape2=bs2)
+
+#Normal
+nm <- 7; nsd <- 2
+yn <- rnorm(n=num.samples,mean=nm,sd=nsd)
+
+# Gamma
+gs  <- 8; gr <- 0.5
+yg <- rgamma(n=num.samples,shape=gs,rate=gr)
+
+# Exponential
+set.seed(153)
+elambda <- 0.5
+ye <- rexp(n=num.samples,rate=elambda)
+
+# Gamma with shape=1 same as Exponential
+set.seed(153)
+yg.e <- rgamma(n=num.samples,shape=1,rate=elambda)
+
+par(mfrow=c(3,2),oma=c(0,0,3,0))
+hist(yu,xlab="x",ylab="",main=paste("Uniform",umin,umax))
+hist(yb,xlab="x",ylab="",main=paste("Beta",bs1,bs2))
+hist(yn,xlab="x",ylab="",main=paste("Normal",nm,nsd))
+hist(yg,xlab="x",ylab="",main=paste("Gamma",gs,gr))
+hist(ye,xlab="x",ylab="",main=paste("Exponential",elambda))
+hist(yg.e,xlab="x",ylab="",main=paste("Gamma",1,elambda))
+par(mfrow=c(1,1))
+```
+  
+###MVN demonstrations
+```{r MVN}
+set.seed(231)
+library(MASS)
+num.dim <- 3
+mu.vec  <- c(8,-4,12)
+
+# Cholesky "decomposition" to construct positive definite Sigma
+Sigma.sqrt <-matrix(c(2,0.8,-1.5,0,1.6,0.3,0,0,2),3,3,byrow=TRUE)
+Sigma <- t(Sigma.sqrt) %*% Sigma.sqrt
+cat("Check for positive definiteness, determinant=",det(Sigma),"\n")
+
+y.mvn <- mvrnorm(n=num.samples,mu=mu.vec,Sigma=Sigma)
+par(mfrow=c(2,3))
+hist(y.mvn[,1],xlab="y1")
+hist(y.mvn[,2],xlab="y2")
+hist(y.mvn[,3],xlab="y3")
+plot(y.mvn[,1],y.mvn[,2],xlab="y1",ylab="",main="y2 vs y1")
+plot(y.mvn[,1],y.mvn[,3],xlab="y1",ylab="",main="y3 vs y1")
+plot(y.mvn[,2],y.mvn[,3],xlab="y2",ylab="",main="y3 vs y2")
+par(mfrow=c(1,1))
+
+```
+
+  

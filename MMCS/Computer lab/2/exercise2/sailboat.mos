@@ -1,0 +1,46 @@
+model sailboat_basic
+uses "mmxprs"
+
+! Computer session 2
+
+declarations
+	number_of_periods = 4
+	number_of_products =2
+	periods = 1..number_of_periods
+	products=1..number_of_products
+	period_names: array(periods) of string
+	product_names: array(products) of string
+	demand,cost: array(products,periods) of real
+	holding_cost,hours_needed: array(products) of real
+	make,sell,inventory: array(products,periods) of mpvar
+	production_limit: real
+end-declarations
+
+initialisations from "sailboat_inventory_multiproduct.dat"
+	period_names demand cost holding_cost production_limit product_names hours_needed
+end-initialisations
+
+! Objective function
+total_cost:= sum(t in periods,p in products) (cost(p,t)*make(p,t)+holding_cost(p)*inventory(p,t)) !signment
+
+! Constraints
+forall(t in periods,p in products) do
+	sell(p,t) >= demand(p,t)
+	!make(t)<=max_production
+	!sum(p in products) (make(p,t)*hours_needed(p)) <=production_limit
+
+	if(t>1) then
+		inventory(p,t)=inventory(p,t-1)+make(p,t)-sell(p,t) !condition
+	else
+		inventory(p,t)=make(p,t)-sell(p,t)
+	end-if
+end-do
+forall(t in periods) do
+	sum(p in products) (make(p,t)*hours_needed(p)) <=production_limit
+end-do
+
+minimize(total_cost)
+
+!
+writeln(getobjval)
+end-model

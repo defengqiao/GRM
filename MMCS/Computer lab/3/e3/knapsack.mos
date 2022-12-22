@@ -1,0 +1,69 @@
+model Knapsack
+
+uses "mmxprs"
+
+declarations
+!x: mpvar
+number_of_items = 4
+Items = 1..number_of_items
+Item_names: array(Items) of string
+benefit,weight: array(Items) of real
+x: array(Items) of mpvar
+! Declerations here
+
+end-declarations
+
+! popolate data
+initialisations from "knapsack.dat"
+benefit weight Item_names
+ !Initilisations here
+end-initialisations
+
+
+
+
+obj := sum(i in Items) benefit(i)*x(i)
+
+sum(i in Items) weight(i)*x(i) <=14
+
+forall(i in Items) do
+ x(i) is_binary
+end-do
+
+maximise(obj)
+
+forward procedure DisplaySolution
+
+if(getprobstat = XPRS_OPT) then
+ writeln("Problem is solved to optimality")
+elif(getprobstat = XPRS_INF) then
+ writeln("Problem is infeasible")
+end-if
+
+!!!!!!!!!!!!!!!!!!! Procedures !!!!!!!!!!!!!!!!
+
+procedure DisplaySolution
+ writeln("Optimal knapsack benefit: ",getobjval,".")
+writeln
+forall(i in Items) do
+	if(getsol(x(i))=1) then 
+		 writeln("* Pack your ",Item_names(i),".")
+	end-if
+ end-do
+ writeln
+ forall(i in Items) do
+   writeln("Your ", Item_names(i), " utilises ",
+   strfmt(100*getsol(x(i))*weight(i)/14,0,2),"% of your knapsack.")
+ end-do
+end-procedure
+
+
+
+
+
+
+
+
+end-model
+
+

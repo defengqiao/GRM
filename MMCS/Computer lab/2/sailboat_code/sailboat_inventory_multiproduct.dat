@@ -1,0 +1,7 @@
+period_names: ["Spring" "Summer" "Autumn" "Winter"]
+product_names: ["Sailboats" "Surfboards"]
+cost: [400 35]
+holding_cost: [50 2]
+production_limit: 1860
+demand: [40 60 75 25 190 350 130 20]
+hours_needed: [20 3]
